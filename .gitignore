@@ -7,3 +7,4 @@ tsne_plots/
 tensorboard*
 logs/
 generated-data/
+data/
