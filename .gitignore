@@ -11,3 +11,4 @@ data/
 
 # additional
 **/.DS_Store
+.vscode/
