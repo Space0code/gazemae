@@ -6,7 +6,10 @@ from datetime import datetime
 import numpy as np
 from torch import manual_seed, nn
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ModuleNotFoundError:
+    SummaryWriter = None
 
 from data import get_corpora
 from data.data import SignalDataset
@@ -78,8 +81,13 @@ class Trainer:
             viewing_time=-1)
 
         if args.tensorboard:
-            self.tensorboard = SummaryWriter(
-                'tensorboard_runs/{}'.format(_rep_name))
+            if SummaryWriter is None:
+                logging.warning(
+                    'Tensorboard is not installed. Continuing without it.')
+                self.tensorboard = None
+            else:
+                self.tensorboard = SummaryWriter(
+                    'tensorboard_runs/{}'.format(_rep_name))
         else:
             self.tensorboard = None
 

@@ -80,6 +80,7 @@ TASKS = {
     'biometrics-emvic': Biometrics_EMVIC,
     'biometrics-emvic-test': Biometrics_EMVIC,
     'biometrics-all': Biometrics,
+    'biometrics-mit-lr': Biometrics_MIT_LR,
     'stimuli-etra': ETRAStimuli,
     'age-group': AgeGroupBinary,
     'gender': GenderBinary

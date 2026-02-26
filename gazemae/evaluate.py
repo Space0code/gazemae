@@ -5,7 +5,10 @@ from math import ceil
 import pandas as pd
 import numpy as np
 from torch import no_grad, Tensor, manual_seed
-from torch.utils.tensorboard import SummaryWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ModuleNotFoundError:
+    SummaryWriter = None
 from sklearn.manifold import TSNE
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -87,9 +90,14 @@ class RepresentationEvaluator:
         # this will hold each trial's representation
         self.df = pd.DataFrame(columns=['corpus', 'subj', 'stim', 'task'])
 
-        self.tensorboard = (SummaryWriter(
-            'tensorboard_evals/{}'.format(self.representation_name))
-            if args.tensorboard else None)
+        self.tensorboard = None
+        if args.tensorboard:
+            if SummaryWriter is None:
+                logging.warning(
+                    'Tensorboard is not installed. Continuing without it.')
+            else:
+                self.tensorboard = SummaryWriter(
+                    'tensorboard_evals/{}'.format(self.representation_name))
 
         self.consolidate_corpora()
 
@@ -199,6 +207,7 @@ class RepresentationEvaluator:
         # tsne_plot_corpus(self.df)
 
     def get_autoencoder_representations(self, network, x):
+        device = next(network.parameters()).device
         if len(x.shape) > 2:
             batch_size = self.batch_size
             if x.shape[1] > x.shape[2]:
@@ -215,7 +224,7 @@ class RepresentationEvaluator:
                     batch = Tensor(x[s]).T.unsqueeze(0)
                 else:
                     batch = Tensor(x[batch_size * s: batch_size * (s + 1)])
-                reps.extend(network.encode(batch.cuda()
+                reps.extend(network.encode(batch.to(device)
                                            )[0].cpu().detach().numpy())
         return reps
 
@@ -224,7 +233,13 @@ class RepresentationEvaluator:
         for i, task in enumerate(self.tasks):
             _task = task.__class__.__name__  # convenience var
             logging.info('\nTask {}: {}'.format(i + 1, _task))
-            x, y, = task.get_xy(self.df)
+            try:
+                x, y, = task.get_xy(self.df)
+            except Exception as exc:
+                logging.warning(
+                    'Skipping task {} due to data/setup error: {}'.format(
+                        _task, exc))
+                continue
             if len(x) < 1:
                 continue
 
@@ -284,6 +299,8 @@ class RepresentationEvaluator:
     def _write_fi_plots(self):
         if len(self.feature_type_idxs) < 2:
             # if not self.tensorboard or len(self.feature_type_idxs) < 2:
+            return
+        if self.fi_df.empty or 'classifier' not in self.fi_df.columns:
             return
 
         classifier = 'svm_linear'
@@ -407,7 +424,7 @@ if __name__ == '__main__':
     evaluator = RepresentationEvaluator(tasks=[
         Biometrics_EMVIC(),
         Biometrics(),
-        # Biometrics_MIT_LR(),
+        Biometrics_MIT_LR(),
         ETRAStimuli(),
         AgeGroupBinary(),
         GenderBinary(),

@@ -1,6 +1,18 @@
+from os import path
+from typing import List
+
 import numpy as np
 from .corpus import EyeTrackingCorpus
 from .utils import *
+from settings import DATA_ROOT
+
+
+def _resolve_existing_subdir(candidates: List[str]) -> str:
+    """Return the first dataset-relative directory that exists on disk."""
+    for candidate in candidates:
+        if path.isdir(path.join(DATA_ROOT, candidate)):
+            return candidate
+    return candidates[0]
 
 
 class MIT_LowRes(EyeTrackingCorpus):
@@ -22,15 +34,22 @@ class MIT_LowRes(EyeTrackingCorpus):
         self.px_per_dva = 35
         self.hz = 240
         self.w, self.h = (1280, 1024)  # stimuli is 860 x 1024
-        self.root = 'MIT-LOWRES/DATA/'
-        self.stim_dir = self.root.replace('DATA', 'ALLSTIMULI')
+        self.root = _resolve_existing_subdir([
+            'MIT-LOWRES/DATA/',
+            'MIT-LOWRES/',
+        ])
+        self.stim_dir = 'MIT-LOWRES/ALLSTIMULI/'
 
         super(MIT_LowRes, self).__init__(args)
 
     def extract(self):
         data = []
         for subj in listdir(self.root):
+            if subj.startswith('__'):
+                continue
             subj_dir = self.root + '/' + subj
+            if not path.isdir(DATA_ROOT + subj_dir):
+                continue
             for stim in listdir(subj_dir):
                 # ignore non-natural and low resolution images...
                 # or should i not?
@@ -62,7 +81,11 @@ class ETRA2019(EyeTrackingCorpus):
         self.w, self.h = (1024, 768)
         self.hz = 500
         self.px_per_dva = 35
-        self.root = 'ETRA2019/data/{}'
+        etra_root = _resolve_existing_subdir([
+            'ETRA2019/data/',
+            'ETRA2019/',
+        ])
+        self.root = etra_root.rstrip('/') + '/{}'
         self.stim_dir = 'ETRA2019/images/'
         self.subjects = ['009', '019', '022', '058', '059',
                          '060', '062', 'SMC']
@@ -99,7 +122,7 @@ class ETRA2019(EyeTrackingCorpus):
                     ((csv['LXpix'] + csv['RXpix']) / 2).to_list(),
                     ((csv['LYpix'] + csv['RYpix']) / 2).to_list()
                 ])
-        return np.array(data)
+        return np.array(data, dtype=object)
 
 
 class EMVIC2014(EyeTrackingCorpus):
@@ -162,7 +185,7 @@ class EMVIC2014(EyeTrackingCorpus):
                     y - np.min(y)
                 ])
 
-        return np.array(data)
+        return np.array(data, dtype=object)
 
 
 class Cerf2007_FIFA(EyeTrackingCorpus):
@@ -252,4 +275,4 @@ class Cerf2007_FIFA(EyeTrackingCorpus):
                         list(eye_data['scan_y'].item()),
                     ])
             # TO-DO: for the 2nd phase, need to filter out probe image data
-        return np.array(data)
+        return np.array(data, dtype=object)

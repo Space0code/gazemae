@@ -1,4 +1,5 @@
 import logging
+import os
 from argparse import ArgumentParser
 
 # training settings
@@ -26,7 +27,8 @@ DECODER_PARAMS = [DECODER_KERNEL_SIZE, DECODER_FILTERS, DECODER_DILATIONS,
 MAX_X_RESOLUTION = 1280
 MAX_Y_RESOLUTION = 1024
 DATA_ROOT = '../data/'
-GENERATED_DATA_ROOT = '../generated-data/'
+GENERATED_DATA_ROOT = os.environ.get(
+    'GAZEMAE_GENERATED_DATA_ROOT', '../generated-data/')
 
 SLICE_OVERLAP_RATIO = 0.2
 
@@ -98,4 +100,7 @@ def get_parser():
     parser.add_argument("--generate", default=False, action="store_true")
     parser.add_argument("--task", default='', type=str,
                         help="task to train supervised CNN on")
+    parser.add_argument("--corpora", default='', type=str,
+                        help="Comma-separated corpora names to load "
+                             "(e.g., 'ETRA2019,MIT-LowRes')")
     return parser

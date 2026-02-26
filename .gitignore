@@ -8,6 +8,7 @@ tensorboard*
 logs/
 generated-data/
 data/
+!gazemae/data/
 
 # additional
 **/.DS_Store

@@ -9,6 +9,9 @@ from .supervised import SupervisedTCN
 class ModelManager:
     def __init__(self, args, training=True, **kwargs):
         self.is_training = training
+        self.device = torch.device(
+            'cuda' if getattr(args, 'cuda', True) and torch.cuda.is_available()
+            else 'cpu')
         self.load_network(args, **kwargs)
 
     def load_network(self, args, **kwargs):
@@ -40,7 +43,12 @@ class ModelManager:
             return None
 
         logging.info('Loading saved model {}...'.format(model_name))
-        model = torch.load('../models/' + model_name)
+        model_path = '../models/' + model_name
+        try:
+            model = torch.load(model_path, map_location=self.device,
+                               weights_only=False)
+        except TypeError:
+            model = torch.load(model_path, map_location=self.device)
         try:
             network = model['network']
         except KeyError:
@@ -48,6 +56,7 @@ class ModelManager:
         self._log(network)
 
         network.load_state_dict(model['model_state_dict'])
+        network = network.to(self.device)
 
         if self.is_training:
             optim = torch.optim.Adam(network.parameters())
