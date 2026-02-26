@@ -1,5 +1,5 @@
 *.png
-__pycache__
+**/__pycache__
 *.pickle
 *.npy
 tmp
@@ -8,3 +8,6 @@ tensorboard*
 logs/
 generated-data/
 data/
+
+# additional
+**/.DS_Store
