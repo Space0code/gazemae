@@ -7,7 +7,8 @@ tsne_plots/
 tensorboard*
 logs/
 generated-data/
-data/
+data/*
+!data/README.md
 !gazemae/data/
 
 # additional
