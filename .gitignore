@@ -9,6 +9,9 @@ logs/
 generated-data/
 data/*
 !data/README.md
+!data/gazemae_outputs/
+data/gazemae_outputs/*
+!data/gazemae_outputs/README.md
 !gazemae/data/
 
 # additional
